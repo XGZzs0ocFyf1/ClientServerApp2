@@ -12,6 +12,8 @@ import java.net.Socket;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
+
+//Client #0 for testing chat
 public class Client {
 
     private final static Logger log = LoggerFactory.getLogger(Client.class);

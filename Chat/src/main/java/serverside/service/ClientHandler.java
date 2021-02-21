@@ -8,6 +8,8 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 
+
+//client handler class : works with chat clients
 public class ClientHandler {
 
     private final static Logger log = LoggerFactory.getLogger(ClientHandler.class);
