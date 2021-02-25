@@ -11,7 +11,7 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 
-
+//server instance. Start it first!
 public class MyServer {
     private final int PORT = 8082;
     private final Logger log = LoggerFactory.getLogger(MyServer.class);
@@ -82,14 +82,6 @@ public class MyServer {
             }
         }
         return "";
-//
-//        log.info("message resipient name {}", messageRecipientOptional.get().getNickname());
-//         if (messageRecipientOptional.get() == null){
-//             return "Nick " + messageRecipientNickname +" is not exist in chat.";
-//         }else{
-//             var messageRecipient = messageRecipientOptional.get();
-//             messageRecipient.sendMessage(messageText);
-//             return "Message was send to " +messageRecipientNickname;
-//         }
+
     }
 }
