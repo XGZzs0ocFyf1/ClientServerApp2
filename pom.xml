@@ -8,7 +8,7 @@
     <artifactId>ClientServerApp2</artifactId>
     <packaging>pom</packaging>
     <version>1.0-SNAPSHOT</version>
-
+<!--superpom-->
 <!--    childs-->
     <modules>
         <module>Chat</module>
