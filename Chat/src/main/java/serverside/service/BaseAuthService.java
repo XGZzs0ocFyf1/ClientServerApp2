@@ -43,7 +43,7 @@ public class BaseAuthService implements AuthService {
                 return entry.nickname;
             }
         }
-        return null;
+        return "anonimus";
     }
 
     @AllArgsConstructor
