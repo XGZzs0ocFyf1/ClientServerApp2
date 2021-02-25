@@ -10,6 +10,8 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.stream.Collectors;
 
 //server instance. Start it first!
 public class MyServer {
@@ -27,7 +29,7 @@ public class MyServer {
             authService = new BaseAuthService();
             authService.start();
 
-            clients = new ArrayList<>();
+            clients = new CopyOnWriteArrayList<>();
 
             while (true) {
                 log.info("Server waiting for client connection");
@@ -54,7 +56,10 @@ public class MyServer {
         }
     }
 
+
+
     public synchronized void subscribe(ClientHandler client) {
+        log.info("Client authenticated {}", client.getNickname());
         clients.add(client);
     }
 
@@ -72,7 +77,7 @@ public class MyServer {
     }
 
     public String sendMessageToUserByNickname(String messageRecipientNickname,
-                                               String messageText) {
+                                              String messageText) {
         log.info("sendMessageToUserByNickName: {} : {}", messageRecipientNickname, messageText);
         for (ClientHandler client : clients) {
             if (client.getNickname().equals(messageRecipientNickname)) {
@@ -84,4 +89,6 @@ public class MyServer {
         return "";
 
     }
+
+
 }
