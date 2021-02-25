@@ -9,7 +9,7 @@ import serverside.interfaces.AuthService;
 import java.util.ArrayList;
 import java.util.List;
 
-//base auth service with hardcoded credentials (just for leaning)
+//base auth service with hardcoded credentials  (just for leaning)
 public class BaseAuthService implements AuthService {
 
     private final static Logger log = LoggerFactory.getLogger(BaseAuthService.class);

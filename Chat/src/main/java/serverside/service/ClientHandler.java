@@ -25,6 +25,7 @@ public class ClientHandler {
     private long timeToLogoutAnonimus = 2 * 60 * 1000;
     private long timeToLogoutAuthenticated = 3 * 60 * 1000;
     private AtomicBoolean isAuthenticatedFlag = new AtomicBoolean();
+    private AtomicBoolean isTimer3MinuteRefreshed = new AtomicBoolean();
     private long joinTime;
     private long authTime;
 
@@ -36,16 +37,26 @@ public class ClientHandler {
             this.dos = new DataOutputStream(socket.getOutputStream());
             this.nickname = "";
             this.isAuthenticatedFlag.set(false);
+            this.isTimer3MinuteRefreshed.set(false);
 
-
+            //disconnect by timer
             new Thread(() -> {
                 while (true) {
+                    //refresh inactive status if send messages
                     if (isAuthenticatedFlag.get()) {
+                        if (isTimer3MinuteRefreshed.get()){
+                            isTimer3MinuteRefreshed.set(false);
+                            authTime = System.currentTimeMillis();
+                            log.info("auth time set to current");
+                        }
+
+                        //disconnect after 3 mins
                         if (authTime != 0 && System.currentTimeMillis() - authTime > timeToLogoutAuthenticated) {
                             closeConnection("3 min disconnect");
                             break;
                         }
                     } else {
+                        //disconnect anonymous users
                         if (joinTime != 0 && System.currentTimeMillis() - joinTime > timeToLogoutAnonimus) {
                             closeConnection("2 min disconnect");
                             break;
@@ -65,7 +76,6 @@ public class ClientHandler {
                 }
             }).start();
         } catch (IOException e) {
-            log.info("exception from core thread : {}");
             e.printStackTrace();
         }
     }
@@ -103,14 +113,11 @@ public class ClientHandler {
 
 
     public void readMessage() throws IOException {
-        var startAt = System.currentTimeMillis();
+
         while (true) {
-            if (System.currentTimeMillis() - startAt > timeToLogoutAuthenticated) {
-                closeConnection("disconnected by timer after 3 minutes");
-                break;
-            }
             var messageFromClient = dis.readUTF();
             handleMessageFromClient(messageFromClient);
+            isTimer3MinuteRefreshed.set(true);
 
         }
 

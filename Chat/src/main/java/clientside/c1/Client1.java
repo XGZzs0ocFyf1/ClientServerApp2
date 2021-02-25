@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.concurrent.ThreadLocalRandom;
 
-//Client #1 for testing chat
+//Client №1 for testing chat
 public class Client1 {
 
     private final static Logger log = LoggerFactory.getLogger(Client1.class);
