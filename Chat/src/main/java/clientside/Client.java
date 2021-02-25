@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 
-//Client #0 for testing chat
+//Client №0 for testing chat
 public class Client {
 
     private final static Logger log = LoggerFactory.getLogger(Client.class);
@@ -105,7 +105,7 @@ public class Client {
     }
 
     private void prepareGUI() {
-        JFrame frame = new JFrame("Chat client");
+        JFrame frame = new JFrame("Chat clienT");
         frame.setBounds(600, 300, 400, 400);
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         BorderLayout borderLayout = new BorderLayout();

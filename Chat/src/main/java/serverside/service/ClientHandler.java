@@ -37,7 +37,7 @@ public class ClientHandler {
             this.nickname = "";
             this.isAuthenticatedFlag.set(false);
 
-
+            //disconnect by timer
             new Thread(() -> {
                 while (true) {
                     if (isAuthenticatedFlag.get()) {

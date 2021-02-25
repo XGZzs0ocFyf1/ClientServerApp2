@@ -1,6 +1,6 @@
 package serverside.interfaces;
 
-//just interface for OOP LSP in our case
+//just interface for oop LSP in our case
 public interface AuthService {
 
     void start();

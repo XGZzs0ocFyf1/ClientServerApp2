@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 
-//server instance. Start it first!
+//server instance. Start it first
 public class MyServer {
     private final int PORT = 8082;
     private final Logger log = LoggerFactory.getLogger(MyServer.class);
