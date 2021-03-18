@@ -12,8 +12,8 @@ public class HomeworkJ3T4part1 {
 
          Thread t3 = new Thread(() -> w.printC());
         t1.start();
-        t2.start(); //c 2 потоками ABABABAB... выводится
-        t3.start();// с добавлением 3 потока все ломается
+        t2.start();
+        t3.start();
     }
 
     public void printA() {
@@ -25,7 +25,7 @@ public class HomeworkJ3T4part1 {
                     }
                     System.out.print("A");
                     currentLetter = 'B';
-                    mon.notify();
+                    mon.notifyAll();
                 }
             } catch (InterruptedException e) {
                 e.printStackTrace();
@@ -44,7 +44,7 @@ public class HomeworkJ3T4part1 {
                     System.out.print("B");
                   //  currentLetter = 'A';
                     currentLetter = 'C';
-                    mon.notify();
+                    mon.notifyAll();
                 }
             } catch (InterruptedException e) {
                 e.printStackTrace();
@@ -63,7 +63,7 @@ public class HomeworkJ3T4part1 {
                     }
                     System.out.print("C");
                     currentLetter = 'A';
-                    mon.notify();
+                    mon.notifyAll();
                 }
             } catch (InterruptedException e) {
                 e.printStackTrace();
