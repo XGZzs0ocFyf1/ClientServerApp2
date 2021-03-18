@@ -22,10 +22,10 @@ public class ClientHandler {
     private String nickname;
 
 
-    private long timeToLogoutAnonimus = 2 * 60 * 1000;
-    private long timeToLogoutAuthenticated = 3 * 60 * 1000;
-    private AtomicBoolean isAuthenticatedFlag = new AtomicBoolean();
-    private AtomicBoolean isTimer3MinuteRefreshed = new AtomicBoolean();
+    private final long timeToLogoutAnonimus = 2 * 60 * 1000;
+    private final long timeToLogoutAuthenticated = 3 * 60 * 1000;
+    private final AtomicBoolean isAuthenticatedFlag = new AtomicBoolean();
+    private final AtomicBoolean isTimer3MinuteRefreshed = new AtomicBoolean();
     private long joinTime;
     private long authTime;
 
