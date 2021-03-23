@@ -7,6 +7,7 @@ import java.util.Arrays;
 import static org.junit.Assert.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+//tests for hasFour handleArray(int[] input)
 public class Java3Task7Test {
 
     private final static Java3Task7 task = new Java3Task7();

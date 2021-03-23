@@ -4,6 +4,7 @@ import part1.Java3Task7;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+//tests for hasFour method
 public class Java3Task7HasFourTest {
 
     Java3Task7 instance = new Java3Task7();
