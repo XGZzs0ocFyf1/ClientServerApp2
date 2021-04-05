@@ -51,6 +51,13 @@ public class BaseAuthService implements AuthService {
         return "anonimus";
     }
 
+    /**
+     * Registration stuff. Check that user is exsists in db, or create new user.
+     * @param login user login, not null, unique in db
+     * @param password user pass
+     * @param nickname user nickname
+     * @return true if user was registered, false otherwise
+     */
     @Override
     public boolean register(String login, String password, String nickname) {
 

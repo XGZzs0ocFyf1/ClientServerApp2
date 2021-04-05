@@ -187,6 +187,7 @@ public class ClientHandler {
             return;
         }
 
+        //rename user logic
         if(messageFromClient.startsWith("/rename")){
             String[] messageContent = messageFromClient.split("\\s");
             if (messageContent[1] !=null){

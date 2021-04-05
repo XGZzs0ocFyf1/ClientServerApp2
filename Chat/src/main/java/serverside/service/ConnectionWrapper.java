@@ -6,10 +6,16 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
+/**
+ * Singleton
+ *
+ * Wrapper for connection instead of using connection pools.
+ * This way used in learning purposes.
+ */
 @Slf4j
 public final class ConnectionWrapper {
 
-    private final static String DRIVER = "com.mysql.jdbc.Driver";
+
     private final static String DB = "jdbc:mysql://localhost:3306/j3t2";
     private final static String LOGIN = "root";
     private final static String PASSWORD = "4Ij_rG3F^$@gSV";
@@ -32,6 +38,10 @@ public final class ConnectionWrapper {
 
     private static Connection connection;
 
+    /**
+     * Connection handler.
+     * @return old connection if it is not empty or closed, otherwise return new connection instance.
+     */
     public  Connection getConnection(){
         try {
             if (connection != null && !connection.isClosed()){
