@@ -10,11 +10,25 @@ import java.net.Socket;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Queue;
+import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.stream.Collectors;
 
 
 //Client №0 for testing chat
+
+/**
+ * java 3 task 3.
+ * modified client class
+ * add local storage (text file). It will be create automaticaly if not exists.
+ * at client start file opened (or created).
+ * history populated from file
+ * history appended by text while client working
+ * history crop by last 100 and then saved to file
+ */
 public class Client {
 
     private final static Logger log = LoggerFactory.getLogger(Client.class);
@@ -27,7 +41,7 @@ public class Client {
     private JTextField msgInputField;
     private DateTimeFormatter formatter = DateTimeFormatter.ofPattern("hh:mm:ss");
     private boolean isAuthorised = false;
-    private CopyOnWriteArrayList<String> history = new CopyOnWriteArrayList<>();
+    private Queue<String> history = new LinkedBlockingQueue<>();
     private final static String FILENAME = "src/main/resources/history.txt";
 
     public Client() {
@@ -41,15 +55,23 @@ public class Client {
 
     }
 
+
+    /**
+     * Saves 100 or history.size() if queue size is less than 100 elements starting
+     * from head of queue.
+     */
     private void saveHistory() {
         log.info("Saving history to local file");
-        java.util.List<String> localHistory100 = history.stream().limit(100).collect(Collectors.toList());
 
-        try(BufferedWriter writer = new BufferedWriter(new FileWriter(FILENAME))){
-            int counter = 0;
-            while (counter < localHistory100.size()){
-                writer.write(localHistory100.get(counter));
-                counter++;
+
+        //take 100 strings or all letters if their number is less than 100
+        int counter = history.size() > 100 ? 100 : history.size();
+
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(FILENAME))) {
+            while (counter > 0) {
+                String message = history.poll();
+                writer.write(message);
+                counter--;
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -58,6 +80,11 @@ public class Client {
 
     }
 
+
+    /**
+     * Method reads file and add all its content to message queue.
+     * @param filename local file on client
+     */
     private void readHistoryFromFile(String filename) {
 
         try (BufferedReader br = new BufferedReader(new FileReader(filename))) {
