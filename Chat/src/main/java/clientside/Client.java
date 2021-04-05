@@ -5,12 +5,13 @@ import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.*;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.net.Socket;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.stream.Collectors;
 
 
 //Client №0 for testing chat
@@ -26,14 +27,56 @@ public class Client {
     private JTextField msgInputField;
     private DateTimeFormatter formatter = DateTimeFormatter.ofPattern("hh:mm:ss");
     private boolean isAuthorised = false;
+    private CopyOnWriteArrayList<String> history = new CopyOnWriteArrayList<>();
+    private final static String FILENAME = "src/main/resources/history.txt";
 
     public Client() {
+
         try {
             connection();
         } catch (IOException e) {
             e.printStackTrace();
         }
         prepareGUI();
+
+    }
+
+    private void saveHistory() {
+        log.info("Saving history to local file");
+        java.util.List<String> localHistory100 = history.stream().limit(100).collect(Collectors.toList());
+
+        try(BufferedWriter writer = new BufferedWriter(new FileWriter(FILENAME))){
+            int counter = 0;
+            while (counter < localHistory100.size()){
+                writer.write(localHistory100.get(counter));
+                counter++;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+
+    }
+
+    private void readHistoryFromFile(String filename) {
+
+        try (BufferedReader br = new BufferedReader(new FileReader(filename))) {
+            String line = null;
+            int counter = 0;
+            while ((line = br.readLine()) != null) {
+                System.out.println(counter);
+                history.add(line);
+                counter++;
+            }
+            log.info(" {} элементов скопировано в историю", counter);
+
+        } catch (FileNotFoundException e) {
+            log.info("Файл {} не существует. Создаю файл", filename);
+            // File f = new File(filename);
+            //  log.info("Файл {} создан.", f.getAbsolutePath());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public void connection() throws IOException {
@@ -44,8 +87,10 @@ public class Client {
         log.info("Connecting to socket {}", socket.getPort());
         log.info("dis : {}", dis);
         log.info("dos : {}", dos);
+        log.info("Printing history of last 100 messages:");
 
         new Thread(() -> {
+            readHistoryFromFile(FILENAME);
             try {
 
                 //Auth infinite loop; if authorised = false stay here
@@ -58,13 +103,19 @@ public class Client {
                         break;
                     }
                     var time = formatter.format(LocalDateTime.now());
-                    chatArea.append("Server [" + time + "] : " + message + "\n");
+                    String chatOutput = "Server [" + time + "] : " + message + "\n";
+                    chatArea.append(chatOutput);
+                    history.add(chatOutput);
                 }
 
                 while (true) {
                     String message = dis.readUTF();
                     var time = formatter.format(LocalDateTime.now());
-                    chatArea.append("Server [" + time + "] : " + message + "\n");
+
+                    //adds to history and to chat area
+                    String chatOutput = "Server [" + time + "] : " + message + "\n";
+                    chatArea.append(chatOutput);
+                    history.add(chatOutput);
                 }
 
 
@@ -84,6 +135,7 @@ public class Client {
 
                 if (msgInputField.getText().equals("/end")) {
                     isAuthorised = false;
+                    saveHistory();
                     closeConnection();
                 }
 //                chatArea.append("Client [" + time + "] : " + msgInputField.getText() + "\n");
@@ -105,7 +157,7 @@ public class Client {
     }
 
     private void prepareGUI() {
-        JFrame frame = new JFrame("Chat clienT");
+        JFrame frame = new JFrame("Chat client");
         frame.setBounds(600, 300, 400, 400);
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         BorderLayout borderLayout = new BorderLayout();
@@ -137,7 +189,27 @@ public class Client {
         this.isAuthorised = true;
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
+
+//        CopyOnWriteArrayList<String> history = new CopyOnWriteArrayList<>();
+//        history.add("1\n");
+//        history.add("2\n");
+//        history.add("3\n");
+//        history.add("4\n");
+//        history.add("5\n");
+//        history.add("6\n");
+//        log.info("Saving history to local file");
+//
+//        java.util.List<String> localHistory100 = history.stream().limit(100).collect(Collectors.toList());
+//
+//        BufferedWriter writer = new BufferedWriter(new FileWriter(FILENAME));
+//        int counter = 0;
+//        while (counter < localHistory100.size()){
+//            writer.write(localHistory100.get(counter));
+//            counter++;
+//        }
+//        writer.close();
+
 
         SwingUtilities.invokeLater(() -> {
             new Client();
