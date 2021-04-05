@@ -7,6 +7,8 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 
@@ -22,10 +24,10 @@ public class ClientHandler {
     private String nickname;
 
 
-    private long timeToLogoutAnonimus = 2 * 60 * 1000;
-    private long timeToLogoutAuthenticated = 3 * 60 * 1000;
-    private AtomicBoolean isAuthenticatedFlag = new AtomicBoolean();
-    private AtomicBoolean isTimer3MinuteRefreshed = new AtomicBoolean();
+    private final long timeToLogoutAnonimus = 2 * 60 * 1000;
+    private final long timeToLogoutAuthenticated = 3 * 60 * 1000;
+    private final AtomicBoolean isAuthenticatedFlag = new AtomicBoolean();
+    private final AtomicBoolean isTimer3MinuteRefreshed = new AtomicBoolean();
     private long joinTime;
     private long authTime;
 
@@ -39,45 +41,64 @@ public class ClientHandler {
             this.isAuthenticatedFlag.set(false);
             this.isTimer3MinuteRefreshed.set(false);
 
+            ExecutorService executor = Executors.newFixedThreadPool(2);
+
             //disconnect by timer
-            new Thread(() -> {
-                while (true) {
-                    //refresh inactive status if send messages
-                    if (isAuthenticatedFlag.get()) {
-                        if (isTimer3MinuteRefreshed.get()){
-                            isTimer3MinuteRefreshed.set(false);
-                            authTime = System.currentTimeMillis();
-                            log.info("auth time set to current");
-                        }
+            Thread timeoutHandlerTask = timeoutHandler();
+            Thread mainLogicTask = mainLogic();
 
-                        //disconnect after 3 mins
-                        if (authTime != 0 && System.currentTimeMillis() - authTime > timeToLogoutAuthenticated) {
-                            closeConnection("3 min disconnect");
-                            break;
-                        }
-                    } else {
-                        //disconnect anonymous users
-                        if (joinTime != 0 && System.currentTimeMillis() - joinTime > timeToLogoutAnonimus) {
-                            closeConnection("2 min disconnect");
-                            break;
-                        }
-                    }
-                }
-            }).start();
+            executor.submit(timeoutHandlerTask);
+            executor.submit(mainLogicTask);
 
-            new Thread(() -> {
-                try {
-                    authentication();
-                    readMessage();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                } finally {
-                    closeConnection("User " + nickname + " disconnected by 500.");
-                }
-            }).start();
+            //close executor if all tasks performed
+            executor.shutdown();
+
+
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private Thread mainLogic() {
+        Thread t2 = new Thread(() -> {
+            try {
+                authentication();
+                readMessage();
+            } catch (IOException e) {
+                e.printStackTrace();
+            } finally {
+                closeConnection("User " + nickname + " disconnected by 500.");
+            }
+        });
+        return t2;
+    }
+
+    private Thread timeoutHandler() {
+        Thread t1 = new Thread(() -> {
+            while (true) {
+                //refresh inactive status if send messages
+                if (isAuthenticatedFlag.get()) {
+                    if (isTimer3MinuteRefreshed.get()){
+                        isTimer3MinuteRefreshed.set(false);
+                        authTime = System.currentTimeMillis();
+                        log.info("auth time set to current");
+                    }
+
+                    //disconnect after 3 mins
+                    if (authTime != 0 && System.currentTimeMillis() - authTime > timeToLogoutAuthenticated) {
+                        closeConnection("3 min disconnect");
+                        break;
+                    }
+                } else {
+                    //disconnect anonymous users
+                    if (joinTime != 0 && System.currentTimeMillis() - joinTime > timeToLogoutAnonimus) {
+                        closeConnection("2 min disconnect");
+                        break;
+                    }
+                }
+            }
+        });
+        return t1;
     }
 
 

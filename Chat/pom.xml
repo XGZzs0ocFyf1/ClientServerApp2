@@ -11,7 +11,7 @@
 
     <artifactId>Chat</artifactId>
 
-<!--    v11-->
+
     <properties>
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
@@ -24,6 +24,7 @@
             <version>1.18.16</version>
             <scope>provided</scope>
         </dependency>
+
 <!--        logging-->
         <dependency>
             <groupId>org.slf4j</groupId>
