@@ -101,17 +101,31 @@ public class ClientHandler {
         return t1;
     }
 
-
+    /**
+     * handles cases: <br>
+     *resigstration - register user. Calls by message /register login, password, nickname,
+     * where login - authentication login, passwrod user password, nickname - user nick name in chat
+     * if login already exists - do nothing
+     *
+     * <br>
+     *     authentication - authenticate existed user. Calls by message in chat /auth login password
+     *
+     * @throws IOException
+     */
     private void authentication() throws IOException {
         joinTime = System.currentTimeMillis();
         while (true) {
             String messageFromClient = dis.readUTF();
+
+            //authentication request;
             if (messageFromClient.startsWith("/auth")) {
                 log.info("Authentication requested by user.");
                 var arr = messageFromClient.split("\\s");
                 var localNick = myServer
                         .getAuthService()
-                        .getNickByLoginAndPassword(arr[1], arr[2]);
+                        .logIn(arr[1], arr[2]);
+
+
                 if (localNick != null) {
                     if (!myServer.isNickBusy(localNick)) {
                         sendMessage("/authok " + localNick);
@@ -129,6 +143,27 @@ public class ClientHandler {
                     sendMessage("Wrong login and password");
                 }
             }
+
+            if(messageFromClient.startsWith("/register")){
+                String[] messageContent = messageFromClient.split("\\s");
+                boolean isRegistered = myServer.getAuthService().register(messageContent[1], messageContent[2],
+                        messageContent[3]);
+                if (isRegistered){
+                    log.info("User {} successfuly registered.", messageContent[1]);
+                    sendMessage("You successfuly registered");
+                }else{
+                    log.info("Login \"{}\" or nickname \"{}\" already exists in this chat", messageContent[1],
+                            messageContent[3]);
+                    sendMessage("Login "+messageContent[1] + " or nickname "+nickname+" already exists in this chat.");
+                }
+            }
+
+
+
+
+
+
+
         }
     }
 
@@ -149,6 +184,21 @@ public class ClientHandler {
 
         if (messageFromClient.equals("/end")) {
             closeConnection("User " + nickname + " log out.");
+            return;
+        }
+
+        //rename user logic
+        if(messageFromClient.startsWith("/rename")){
+            String[] messageContent = messageFromClient.split("\\s");
+            if (messageContent[1] !=null){
+                boolean isRenamed = myServer.getAuthService().rename(this.nickname, messageContent[2]);
+                if (isRenamed){
+                    sendMessage("User "+nickname+" renamed to "+messageContent[2]);
+                    this.nickname = messageContent[2];
+                }
+            }else{
+                sendMessage("Change name request should looks like: /rename oldUserName newUserName");
+            }
             return;
         }
 
