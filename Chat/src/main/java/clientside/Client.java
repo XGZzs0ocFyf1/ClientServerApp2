@@ -10,12 +10,8 @@ import java.net.Socket;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Queue;
-import java.util.concurrent.BlockingDeque;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.stream.Collectors;
+import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 
 
 //Client №0 for testing chat
@@ -41,7 +37,7 @@ public class Client {
     private JTextField msgInputField;
     private DateTimeFormatter formatter = DateTimeFormatter.ofPattern("hh:mm:ss");
     private boolean isAuthorised = false;
-    private Queue<String> history = new LinkedBlockingQueue<>();
+    private List<String> history = new ArrayList<>();
     private final static String FILENAME = "src/main/resources/history.txt";
 
     public Client() {
@@ -63,93 +59,65 @@ public class Client {
     private void saveHistory() {
         log.info("Saving history to local file");
 
-
-        //take 100 strings or all letters if their number is less than 100
-        int counter = history.size() > 100 ? 100 : history.size();
-
+        //here we select start position 0 (if size - 100 < 0) or some initial value (that = size - 100)
+        int counter = Math.max(0, history.size() - 100);
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(FILENAME))) {
-            while (counter > 0) {
-                String message = history.poll();
+            while (counter < history.size()) {
+
+                String message = history.get(counter);
+                log.info("{} : {} ", counter, message);
                 writer.write(message);
-                counter--;
+                counter++;
             }
+            log.info("Saved");
         } catch (IOException e) {
+            log.info("could not save to file");
             e.printStackTrace();
         }
 
 
     }
 
-
     /**
      * Method reads file and add all its content to message queue.
+     *
      * @param filename local file on client
      */
     private void readHistoryFromFile(String filename) {
 
         try (BufferedReader br = new BufferedReader(new FileReader(filename))) {
-            String line = null;
+            String line;
             int counter = 0;
             while ((line = br.readLine()) != null) {
-                System.out.println(counter);
-                history.add(line);
+                log.info("{} : {}", counter, line);
+                history.add(line + "\n");
                 counter++;
             }
             log.info(" {} элементов скопировано в историю", counter);
 
         } catch (FileNotFoundException e) {
             log.info("Файл {} не существует. Создаю файл", filename);
-            // File f = new File(filename);
-            //  log.info("Файл {} создан.", f.getAbsolutePath());
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    public void connection() throws IOException {
-        socket = new Socket(SERVER_ADDRESS, SERVER_PORT);
-        dis = new DataInputStream(socket.getInputStream());
-        dos = new DataOutputStream(socket.getOutputStream());
 
-        log.info("Connecting to socket {}", socket.getPort());
-        log.info("dis : {}", dis);
-        log.info("dos : {}", dos);
-        log.info("Printing history of last 100 messages:");
+    private void printLast100FromHistory() {
+        log.info("history size {}", history.size());
+        log.info("Printing history of last {} messages:");
 
-        new Thread(() -> {
-            readHistoryFromFile(FILENAME);
-            try {
+        int counter = history.size() - 100;
+        counter = Math.max(counter, 0); //check if startIDx negative - starts from zero
 
-                //Auth infinite loop; if authorised = false stay here
-                while (true) {
-                    String message = dis.readUTF();
-
-                    //client side authorisation by server responce
-                    if (message.startsWith("/authok")) {
-                        setAuthorised();
-                        break;
-                    }
-                    var time = formatter.format(LocalDateTime.now());
-                    String chatOutput = "Server [" + time + "] : " + message + "\n";
-                    chatArea.append(chatOutput);
-                    history.add(chatOutput);
-                }
-
-                while (true) {
-                    String message = dis.readUTF();
-                    var time = formatter.format(LocalDateTime.now());
-
-                    //adds to history and to chat area
-                    String chatOutput = "Server [" + time + "] : " + message + "\n";
-                    chatArea.append(chatOutput);
-                    history.add(chatOutput);
-                }
+        while (counter < history.size()) {
+            String message = history.get(counter);
+            log.info("{} : {}", counter, message);
+            chatArea.append(message);
+            counter++;
+        }
 
 
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }).start();
     }
 
 
@@ -157,7 +125,6 @@ public class Client {
         if (msgInputField.getText() != null && !msgInputField.getText().trim().isEmpty()) {
 
             try {
-                var time = formatter.format(LocalDateTime.now());
                 dos.writeUTF(msgInputField.getText());
 
                 if (msgInputField.getText().equals("/end")) {
@@ -165,7 +132,6 @@ public class Client {
                     saveHistory();
                     closeConnection();
                 }
-//                chatArea.append("Client [" + time + "] : " + msgInputField.getText() + "\n");
                 msgInputField.setText("");
             } catch (IOException e) {
                 e.printStackTrace();
@@ -183,6 +149,51 @@ public class Client {
         }
     }
 
+    public void connection() throws IOException {
+        socket = new Socket(SERVER_ADDRESS, SERVER_PORT);
+        dis = new DataInputStream(socket.getInputStream());
+        dos = new DataOutputStream(socket.getOutputStream());
+
+        log.info("Connecting to socket {}", socket.getPort());
+        log.info("dis : {}", dis);
+        log.info("dos : {}", dos);
+
+        new Thread(() -> {
+            readHistoryFromFile(FILENAME);
+            try {
+
+                //Auth infinite loop; if authorised = false stay here
+                while (true) {
+                    String message = dis.readUTF();
+
+                    //client side authorisation by server responce
+                    if (message.startsWith("/authok")) {
+                        setAuthorised();
+                        break;
+                    }
+
+                }
+
+                printLast100FromHistory();
+
+                while (true) {
+                    String message = dis.readUTF();
+                    var time = formatter.format(LocalDateTime.now());
+
+                    //adds to history and to chat area
+                    String chatOutput = "Server [" + time + "] : " + message + "\n";
+                    chatArea.append(chatOutput);
+                    history.add(chatOutput);
+                }
+
+
+            } catch (IOException e) {
+                saveHistory();
+                e.printStackTrace();
+            }
+        }).start();
+    }
+
     private void prepareGUI() {
         JFrame frame = new JFrame("Chat client");
         frame.setBounds(600, 300, 400, 400);
@@ -193,7 +204,12 @@ public class Client {
         chatArea = new JTextArea(21, 20);
         chatArea.setEditable(false);
         chatArea.setLineWrap(true);
-        chatArea.setBackground(new Color(190, 134, 243));
+
+        //generate random color background
+        var blueColorValue = ThreadLocalRandom.current().nextInt(50, 250);
+        var redColorValue = ThreadLocalRandom.current().nextInt(50, 250);
+        var greenColorValue = ThreadLocalRandom.current().nextInt(50, 250);
+        chatArea.setBackground(new Color(redColorValue, greenColorValue, blueColorValue));
 
         msgInputField = new JTextField(29);
         var sendButton = new JButton("send");
@@ -216,28 +232,7 @@ public class Client {
         this.isAuthorised = true;
     }
 
-    public static void main(String[] args) throws IOException {
-
-//        CopyOnWriteArrayList<String> history = new CopyOnWriteArrayList<>();
-//        history.add("1\n");
-//        history.add("2\n");
-//        history.add("3\n");
-//        history.add("4\n");
-//        history.add("5\n");
-//        history.add("6\n");
-//        log.info("Saving history to local file");
-//
-//        java.util.List<String> localHistory100 = history.stream().limit(100).collect(Collectors.toList());
-//
-//        BufferedWriter writer = new BufferedWriter(new FileWriter(FILENAME));
-//        int counter = 0;
-//        while (counter < localHistory100.size()){
-//            writer.write(localHistory100.get(counter));
-//            counter++;
-//        }
-//        writer.close();
-
-
+    public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             new Client();
         });
