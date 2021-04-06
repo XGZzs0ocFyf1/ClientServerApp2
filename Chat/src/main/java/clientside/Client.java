@@ -17,8 +17,8 @@ import java.util.concurrent.ThreadLocalRandom;
 //Client №0 for testing chat
 
 /**
- * java 3 task 3.
- * modified client class
+ * java 3 task 3.</br>
+ * modified client class</br>
  * add local storage (text file). It will be create automaticaly if not exists.
  * at client start file opened (or created).
  * history populated from file
